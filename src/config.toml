@@ -1,0 +1,25 @@
+seed = 2021 # random seed
+use_gpu = true
+
+[neural_net]
+train_batch_size = 64
+test_batch_size = 100
+architecture = "vgg" # resnet, resnetwide, efficientnet, preact_resnet, dropout_resnet, resnet_after_encoder, VGG_l2_normalized
+save_checkpoint = true
+preceding_layers = ['features.1', 'features.5', 'features.9', 'features.12', 'features.16', 'features.19', 'features.23', 'features.26'] #vgg
+fractional_relu_layers = ['features.2', 'features.6', 'features.10', 'features.13', 'features.17', 'features.20', 'features.24', 'features.27'] #vgg
+
+[optimizer]
+name = "adam" # sgd, adam, rms
+momentum = 0.9 # for optimizers with momentum
+weight_decay = 0.0005
+lr_scheduler="step"
+
+[attack]
+save = true # save the attack into a file
+skip_clean = false # skip calculating clean accuracy while attacking
+progress_bar = true # show progress bar while attacking
+nb_imgs = -1 # if a positive number, only that many images are tested
+
+rfgsm_alpha = 0.03921568627 # RFGSM step size
+
