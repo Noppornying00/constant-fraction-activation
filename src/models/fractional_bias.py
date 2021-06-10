@@ -57,6 +57,7 @@ class relu_constant_fraction(nn.Module):
         # not registering it as a parameter on purpose
         self.biases = nn.Parameter(torch.zeros(nb_channels))
         self.biases.requires_grad = False
+        self.bias_buffer = None
 
     def forward(self, x):
         return relu(x-self.biases.view(1, -1, 1, 1))
@@ -75,8 +76,25 @@ class relu_constant_fraction(nn.Module):
             return ratios-desired_fraction
 
         with torch.no_grad():
-            self.biases.data = regula_falsi(
-                get_fraction_deviation, -1*torch.ones_like(self.biases), 1*torch.ones_like(self.biases), 20)
+            solutions = regula_falsi(
+                get_fraction_deviation, -3*torch.ones_like(self.biases), 3*torch.ones_like(self.biases), 20)
+
+            momentum = 0.75
+            dampening = 0.0
+            lr = 0.5
+
+            delta = solutions-self.biases
+            buf = self.bias_buffer
+
+            if buf is None:
+                buf = torch.clone(delta).detach()
+                self.bias_buffer = buf
+            else:
+                buf.mul_(momentum).add_(delta, alpha=1 - dampening)
+
+            delta = buf
+
+            self.biases.add_(delta, alpha=lr)
 
     def get_activation_fractions(self, prev_layer_outputs):
 
